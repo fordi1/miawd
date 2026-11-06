@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: mawid
+      POSTGRES_USER: mawid
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mawid_dev_only}
+    ports:
+      - "54329:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mawid -d mawid"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  dbdata:

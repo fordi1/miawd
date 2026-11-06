@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>موعد — لوحة الحجوزات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ---------- Design tokens (SPEC §12) ---------- */
+:root{
+  --bg:#EEF2F7; --surface:#FFFFFF; --surface-2:#F6F8FC;
+  --primary:#4466F2; --primary-2:#5B7CFA; --primary-soft:#E6ECFE;
+  --success:#22C77A; --success-2:#3EDB8E; --success-soft:#DDF6EA;
+  --warning:#F59E0B; --warning-soft:#FEF0DB;
+  --danger:#EF4444; --danger-soft:#FDE4E4;
+  --violet:#8B6CF6; --violet-soft:#EEE9FE;
+  --text:#1D2433; --muted:#8A93A6; --line:#E4E9F2;
+  --r-card:16px; --r-sheet:28px;
+  --shadow:0 10px 30px rgba(68,102,242,.10);
+  --shadow-sm:0 4px 14px rgba(29,36,51,.06);
+  --glow:0 12px 28px rgba(68,102,242,.45);
+  --glow-green:0 12px 24px rgba(34,199,122,.40);
+  --font:"Vazirmatn",system-ui,sans-serif;
+  --hour:84px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+[dir="rtl"] .flip{transform:scaleX(-1)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding-inline:16px;border-radius:12px;font-weight:600;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--primary-2),var(--primary));color:#fff;box-shadow:0 8px 18px rgba(68,102,242,.30)}
+.btn-ghost{background:var(--surface);box-shadow:var(--shadow-sm)}
+.icon-btn{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;position:relative}
+.icon-btn:hover{background:var(--surface-2)}
+.chip{display:inline-flex;align-items:center;min-height:32px;padding-inline:14px;border-radius:999px;background:var(--surface);font-size:13px;font-weight:600;white-space:nowrap;box-shadow:var(--shadow-sm);color:#4B5468}
+.chip.on{background:linear-gradient(135deg,var(--primary-2),var(--primary));color:#fff;box-shadow:0 6px 14px rgba(68,102,242,.35)}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.st-confirmed{background:var(--success-soft);color:#14965A}
+.st-held{background:var(--warning-soft);color:#B76E00}
+.st-cancelled{background:var(--danger-soft);color:#C53030}
+.st-progress{background:var(--violet-soft);color:#6B4FD8}
+.st-free{background:var(--primary-soft);color:var(--primary)}
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex:none;border:2px solid #fff}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow)}
+
+/* ---------- App shell (desktop) ---------- */
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+.sidebar{background:var(--surface);padding:22px 16px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;box-shadow:var(--shadow-sm)}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 22px}
+.brand-mark{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--primary-2),var(--primary));display:grid;place-items:center;color:#fff;box-shadow:var(--glow)}
+.brand b{font-size:20px;display:block;line-height:1.1}
+.brand small{color:var(--muted);font-size:12px}
+.nav a{display:flex;align-items:center;gap:12px;min-height:46px;padding-inline:14px;border-radius:13px;color:#4B5468;text-decoration:none;font-weight:500;white-space:nowrap}
+.nav a:hover{background:var(--surface-2)}
+.nav a.on{background:linear-gradient(135deg,var(--primary-2),var(--primary));color:#fff;box-shadow:0 8px 18px rgba(68,102,242,.30)}
+.side-help{margin-top:auto;background:var(--surface-2);border-radius:var(--r-card);padding:16px;text-align:center}
+.side-help b{display:block;margin:6px 0 2px}
+.side-help .btn{margin-top:10px;width:100%;background:var(--surface);box-shadow:var(--shadow-sm);color:var(--primary)}
+
+.main{min-width:0;padding:18px 26px 40px;display:flex;flex-direction:column;gap:18px}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.month-btn{display:inline-flex;align-items:center;gap:10px;min-height:44px;font-size:21px;font-weight:700;white-space:nowrap}
+.month-btn .i{color:var(--primary)}
+.search{flex:1 1 260px;display:flex;align-items:center;gap:10px;min-height:44px;padding-inline:14px;background:var(--surface);border-radius:13px;box-shadow:var(--shadow-sm);color:var(--muted);max-width:460px;margin-inline:auto}
+.search input{border:0;outline:0;background:transparent;font:inherit;width:100%;color:var(--text)}
+.top-actions{display:flex;align-items:center;gap:6px}
+.dot{position:absolute;top:9px;inset-inline-end:9px;min-width:16px;height:16px;border-radius:99px;background:var(--danger);color:#fff;font-size:10px;display:grid;place-items:center;font-weight:700;padding-inline:4px}
+.lang{display:inline-flex;background:var(--surface);border-radius:12px;box-shadow:var(--shadow-sm);padding:4px;gap:2px}
+.lang button{min-height:36px;padding-inline:12px;border-radius:9px;font-weight:600;font-size:13px;white-space:nowrap;color:var(--muted)}
+.lang button.on{background:var(--primary-soft);color:var(--primary)}
+
+.content{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start}
+
+/* Week strip */
+.week{display:flex;align-items:center;gap:6px;padding:10px}
+.week .days{flex:1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.wd{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:14px;font-size:12.5px;color:var(--muted)}
+.wd b{font-size:19px;color:var(--text);width:40px;height:40px;display:grid;place-items:center;border-radius:50%}
+.wd.on b{background:linear-gradient(135deg,var(--primary-2),var(--primary));color:#fff;box-shadow:var(--glow)}
+.wd.today b{color:var(--success)}
+.wd.off{opacity:.55}
+.wd.off b{text-decoration:line-through;text-decoration-thickness:1px}
+
+/* Toolbar */
+.toolbar{display:flex;flex-wrap:wrap;align-items:stretch;gap:10px}
+.toolbar .seg{display:inline-flex;background:var(--surface);border-radius:12px;box-shadow:var(--shadow-sm);padding:4px}
+.toolbar .seg button{min-height:36px;padding-inline:14px;border-radius:9px;font-weight:600;white-space:nowrap;color:var(--muted)}
+.toolbar .seg button.on{background:var(--primary-soft);color:var(--primary)}
+.toolbar .filters{flex:1 1 220px;display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;padding-block:4px}
+
+/* Board: technician columns */
+.board{padding:0;overflow:hidden}
+.board-head{display:grid;grid-template-columns:64px repeat(3,minmax(0,1fr));border-bottom:1px solid var(--line)}
+.tech{display:flex;align-items:center;gap:10px;padding:14px;border-inline-start:1px solid var(--line);min-width:0}
+.tech b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tech small{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:12px;white-space:nowrap}
+.tech small::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--success)}
+.tech small.busy::before{background:var(--warning)}
+.board-body{display:grid;grid-template-columns:64px repeat(3,minmax(0,1fr));position:relative}
+.hours div{height:var(--hour);font-size:12px;color:var(--muted);padding-inline:12px;padding-top:6px;white-space:nowrap}
+.col{position:relative;border-inline-start:1px solid var(--line);background-image:linear-gradient(var(--line) 1px,transparent 1px);background-size:100% var(--hour)}
+.ev{position:absolute;inset-inline:8px;border-radius:14px;padding:8px 12px;background:var(--surface);box-shadow:0 6px 18px rgba(29,36,51,.08);border-inline-start:4px solid var(--primary);display:flex;flex-direction:column;gap:3px;overflow:hidden;transition:transform .15s}
+.ev:hover{transform:translateY(-2px)}
+.ev>*{flex-shrink:0}
+.ev .t{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev .time{font-size:13.5px;font-weight:700;white-space:nowrap;direction:ltr;unicode-bidi:isolate;align-self:flex-start}
+.ev .time i{font-style:normal;color:var(--primary);letter-spacing:-1px;margin-inline:4px}
+.ev .meta{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:auto;font-size:12px;color:var(--muted);min-width:0}
+.ev .meta span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.confirmed{border-color:var(--success)}
+.ev.held{border-color:var(--warning);background:repeating-linear-gradient(135deg,#fff,#fff 10px,#FFF8EC 10px,#FFF8EC 20px)}
+.ev.cancelled{border-color:var(--danger);opacity:.6}
+.ev.cancelled .time{text-decoration:line-through}
+.ev.now{background:linear-gradient(135deg,var(--success-2),var(--success));color:#fff;border-color:transparent;box-shadow:var(--glow-green)}
+.ev.now .t,.ev.now .meta{color:rgba(255,255,255,.85)}
+.ev.now .time i{color:#fff}
+.ev.free{border:1.5px dashed #B9C6F8;background:var(--surface-2);box-shadow:none;justify-content:center;align-items:center;flex-direction:row;gap:8px;color:var(--primary);font-weight:600;font-size:13px}
+.now-line{position:absolute;inset-inline:64px 0;height:2px;background:var(--danger);z-index:2;pointer-events:none}
+.now-line::before{content:"";position:absolute;inset-inline-start:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--danger)}
+
+/* Right rail */
+.rail{display:flex;flex-direction:column;gap:18px}
+.rail h3{margin:0;font-size:16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rail .card{padding:18px}
+.mcal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mcal-head b{font-size:16px}
+.mcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));row-gap:6px;text-align:center}
+.mcal .dn{font-size:11.5px;color:var(--muted);padding-bottom:4px}
+.mcal .d{height:38px;display:grid;place-items:center;font-size:14px;font-weight:500;position:relative}
+.mcal .d span{width:34px;height:34px;display:grid;place-items:center;border-radius:50%}
+.mcal .d.has::after{content:"";position:absolute;bottom:1px;width:4px;height:4px;border-radius:50%;background:var(--primary)}
+.mcal .d.off{color:#C2C8D4}
+.mcal .d.today span{background:linear-gradient(135deg,var(--success-2),var(--success));color:#fff;box-shadow:var(--glow-green)}
+.mcal .d.sel span{background:linear-gradient(135deg,var(--primary-2),var(--primary));color:#fff;box-shadow:var(--glow)}
+.mcal .band{grid-column:1/-1;height:0}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px;text-align:center}
+.stats div{padding:12px 4px;border-radius:14px;background:var(--surface-2)}
+.stats b{display:block;font-size:24px;font-weight:800}
+.stats small{font-size:12px;font-weight:600}
+.task{display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;background:var(--surface-2);margin-top:10px}
+.task .body{flex:1;min-width:0}
+.task .t{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task .time{font-weight:700;font-size:13.5px;direction:ltr;unicode-bidi:isolate;display:inline-block;white-space:nowrap}
+.task .time i{font-style:normal;color:var(--primary);margin-inline:4px;letter-spacing:-1px}
+.quick{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--primary-2),var(--primary));color:#fff;border-radius:var(--r-card);padding:16px;box-shadow:var(--glow);text-align:start;width:100%}
+.quick small{display:block;opacity:.85;font-size:12px}
+.fab{position:fixed;inset-inline-end:32px;bottom:32px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--primary-2),var(--primary));color:#fff;display:grid;place-items:center;box-shadow:var(--glow);z-index:20}
+.fab svg.i{width:26px;height:26px;stroke-width:2.4}
+
+/* ---------- Mobile view (reference app style) ---------- */
+.m{display:none}
+.m-head{display:flex;align-items:center;justify-content:space-between;padding:14px 12px 6px;position:sticky;top:0;background:var(--bg);z-index:10}
+.m-head .month-btn{font-size:19px}
+.m-chips{display:flex;gap:8px;overflow-x:auto;padding:8px 16px 12px;scrollbar-width:none}
+.m-chips::-webkit-scrollbar,.toolbar .filters::-webkit-scrollbar{display:none}
+.m-cols{display:grid;grid-template-columns:62px minmax(0,1fr);padding-inline:16px;font-size:12px;color:#4B5468;font-weight:600;letter-spacing:.3px}
+.tl{padding:6px 16px 120px}
+.tl-day{display:grid;grid-template-columns:62px minmax(0,1fr);position:relative}
+.tl-date{position:relative;padding-top:6px}
+.tl-date b{display:block;font-size:28px;font-weight:800;line-height:1}
+.tl-date small{color:var(--muted);font-size:12px}
+.tl-date::after{content:"";position:absolute;inset-inline-end:-4px;top:12px;width:9px;height:9px;border-radius:50%;border:2.5px solid var(--primary);background:var(--bg);z-index:1}
+.tl-day.today .tl-date::after{border-color:var(--success)}
+.tl-day::before{content:"";position:absolute;inset-inline-start:61px;top:0;bottom:0;width:2px;background:linear-gradient(var(--primary),#9DB0FA)}
+.tl-events{display:flex;flex-direction:column;gap:10px;padding-bottom:22px;padding-inline-start:10px;min-width:0}
+.m-ev{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:14px;padding:12px 14px;box-shadow:0 6px 18px rgba(29,36,51,.07);min-width:0}
+.m-ev .body{flex:1;min-width:0}
+.m-ev .t{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-ev .time{font-size:14px;font-weight:700;direction:ltr;unicode-bidi:isolate;display:inline-block;white-space:nowrap}
+.m-ev .time i{font-style:normal;color:var(--primary);margin-inline:4px;letter-spacing:-1px}
+.m-ev .zone{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-ev .zone svg.i{width:13px;height:13px}
+.m-ev .side{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.m-ev.now{background:linear-gradient(135deg,var(--success-2),var(--success));color:#fff;box-shadow:var(--glow-green)}
+.m-ev.now .t,.m-ev.now .zone{color:rgba(255,255,255,.88)}
+.m-ev.now .time i{color:#fff}
+.m-ev.hero{background:linear-gradient(135deg,var(--primary-2),var(--primary));color:#fff;box-shadow:var(--glow)}
+.m-ev.hero .t,.m-ev.hero .zone{color:rgba(255,255,255,.88)}
+.m-ev.hero .time i{color:#fff}
+.m-ev.held{background:repeating-linear-gradient(135deg,#fff,#fff 10px,#FFF8EC 10px,#FFF8EC 20px)}
+.m-ev.cancelled{opacity:.55}
+.m-ev.cancelled .time{text-decoration:line-through}
+.kebab{width:28px;height:44px;display:grid;place-items:center;color:var(--muted);margin-inline-end:-8px}
+.m-ev.now .kebab,.m-ev.hero .kebab{color:#fff}
+.m-month{padding:4px 16px 120px;display:none}
+.m-month .mcal .d{height:46px;font-size:16px}
+.m-month .mcal .d span{width:40px;height:40px}
+.m-month h4{margin:22px 0 4px;font-size:16px}
+.tabbar{position:fixed;bottom:0;inset-inline:0;height:78px;background:var(--surface);display:grid;grid-template-columns:repeat(5,1fr);align-items:center;box-shadow:0 -6px 24px rgba(29,36,51,.06);border-radius:24px 24px 0 0;padding-bottom:env(safe-area-inset-bottom);z-index:20}
+.tabbar button{height:56px;display:grid;place-items:center;color:#B4BCCB}
+.tabbar button.on{color:var(--primary)}
+.tabbar svg.i{width:24px;height:24px}
+.tabbar .fab-m{width:62px;height:62px;border-radius:50%;margin:-34px auto 0;background:linear-gradient(135deg,var(--primary-2),var(--primary));color:#fff;box-shadow:var(--glow)}
+.tabbar .fab-m svg.i{width:28px;height:28px;stroke-width:2.4}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1279px){
+  .content{grid-template-columns:minmax(0,1fr)}
+  .rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:1099px){
+  .app{grid-template-columns:84px minmax(0,1fr)}
+  .sidebar{padding:22px 12px;align-items:center}
+  .brand div,.nav a span,.side-help{display:none}
+  .brand{padding-inline:0}
+  .nav a{justify-content:center;padding-inline:0;width:52px}
+  .main{padding-inline:18px}
+}
+@media (max-width:767px){
+  .app,.fab{display:none}
+  .m{display:block}
+}
+</style>
+</head>
+<body>
+
+<!-- Icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-4"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></symbol>
+  </defs>
+</svg>
+
+<!-- ================= DESKTOP / TABLET ================= -->
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark"><svg class="i"><use href="#i-cal"/></svg></span>
+      <div><b data-t="brand">موعد</b><small data-t="bizName">مؤسسة النور</small></div>
+    </div>
+    <nav class="nav">
+      <a href="#" class="on"><svg class="i"><use href="#i-cal"/></svg><span data-t="navCalendar">التقويم</span></a>
+      <a href="#"><svg class="i"><use href="#i-users"/></svg><span data-t="navStaff">الفنيين</span></a>
+      <a href="#"><svg class="i"><use href="#i-wrench"/></svg><span data-t="navServices">الخدمات</span></a>
+      <a href="#"><svg class="i"><use href="#i-pin"/></svg><span data-t="navZones">المناطق</span></a>
+      <a href="#"><svg class="i"><use href="#i-gear"/></svg><span data-t="navSettings">الإعدادات</span></a>
+    </nav>
+    
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="month-btn"><svg class="i"><use href="#i-cal"/></svg><span data-t="month">تشرين الثاني 2026</span><svg class="i"><use href="#i-down"/></svg></button>
+      <label class="search"><svg class="i"><use href="#i-search"/></svg><input data-ph="search" placeholder="دوّر برقم الزبون أو رقم الطلب…"></label>
+      <div class="top-actions">
+                <div class="lang"><button data-lang="ar" class="on">عربي</button><button data-lang="en">EN</button></div>
+        <span class="avatar" style="background:var(--primary);width:42px;height:42px">ر</span>
+      </div>
+    </header>
+
+    <div class="content">
+      <section style="display:flex;flex-direction:column;gap:16px;min-width:0">
+        <div class="card week">
+          <button class="icon-btn"><svg class="i flip"><use href="#i-prev"/></svg></button>
+          <div class="days" id="week"></div>
+          <button class="icon-btn"><svg class="i flip"><use href="#i-next"/></svg></button>
+        </div>
+
+        <div class="toolbar">
+          <div class="seg"><button class="on" data-t="day">يوم</button><button data-t="weekV">أسبوع</button><button data-t="monthV">شهر</button></div>
+          <div class="filters" id="filters"></div>
+          <button class="btn btn-primary"><svg class="i"><use href="#i-plus"/></svg><span data-t="newBooking">حجز جديد</span></button>
+        </div>
+
+        <div class="card board">
+          <div class="board-head" id="boardHead"></div>
+          <div class="board-body" id="boardBody"></div>
+        </div>
+      </section>
+
+      <aside class="rail">
+        <div class="card">
+          <h3><span data-t="today">حجوزات اليوم</span><span class="pill st-free" id="todayCount"></span></h3>
+          <div class="stats" id="stats"></div>
+          <div id="tasks"></div>
+        </div>
+        <div class="card">
+          <div class="mcal-head">
+            <button class="icon-btn"><svg class="i flip"><use href="#i-prev"/></svg></button>
+            <b data-t="month">تشرين الثاني 2026</b>
+            <button class="icon-btn"><svg class="i flip"><use href="#i-next"/></svg></button>
+          </div>
+          <div class="mcal" id="mcal"></div>
+          <button class="quick" style="margin-top:16px">
+            <svg class="i"><use href="#i-zap"/></svg>
+            <span style="flex:1"><b data-t="quick">حجز سريع</b><small data-t="quickSub">لاقي أقرب موعد فاضي بثواني</small></span>
+            <svg class="i flip"><use href="#i-next"/></svg>
+          </button>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+<button class="fab" aria-label="new booking"><svg class="i"><use href="#i-plus"/></svg></button>
+
+<!-- ================= MOBILE ================= -->
+<div class="m">
+  <header class="m-head">
+    <button class="icon-btn"><svg class="i"><use href="#i-menu"/></svg></button>
+    <button class="month-btn"><span data-t="month">تشرين الثاني 2026</span><svg class="i"><use href="#i-down"/></svg></button>
+    <div style="display:flex;align-items:center">
+      <button class="icon-btn" id="mLang" style="font-weight:700;font-size:13px">EN</button>
+      <button class="icon-btn"><svg class="i"><use href="#i-more"/></svg></button>
+    </div>
+  </header>
+  <div class="m-chips" id="mChips"></div>
+
+  <div id="mTimeline">
+    <div class="m-cols"><span data-t="colDate">التاريخ</span><span data-t="colBookings">الحجوزات</span></div>
+    <div class="tl" id="tl"></div>
+  </div>
+  <div class="m-month" id="mMonth">
+    <div class="mcal" id="mcal2"></div>
+    <h4 data-t="tasksToday">مواعيد اليوم</h4>
+    <div id="tasks2"></div>
+  </div>
+
+  <nav class="tabbar">
+    <button class="on" data-view="timeline" aria-label="timeline"><svg class="i"><use href="#i-list"/></svg></button>
+    <button data-view="month" aria-label="month"><svg class="i"><use href="#i-cal"/></svg></button>
+    <button class="fab-m" aria-label="new booking"><svg class="i"><use href="#i-plus"/></svg></button>
+    <button aria-label="technicians"><svg class="i"><use href="#i-users"/></svg></button>
+    <button aria-label="settings"><svg class="i"><use href="#i-gear"/></svg></button>
+  </nav>
+</div>
+
+<script>
+/* ---------- i18n ---------- */
+const T = {
+  ar:{brand:"موعد",bizName:"مؤسسة النور",navCalendar:"التقويم",navStaff:"الفنيين",navServices:"الخدمات",navZones:"المناطق",navClosures:"العطل",navUsers:"المستخدمين",navReport:"التقرير الشهري",navSettings:"الإعدادات",month:"تشرين الثاني 2026",search:"دوّر برقم الزبون أو رقم الطلب…",day:"يوم",weekV:"أسبوع",monthV:"شهر",newBooking:"حجز جديد",
+      today:"حجوزات اليوم",quick:"حجز سريع",quickSub:"لاقي أقرب موعد فاضي بثواني",colDate:"التاريخ",colBookings:"الحجوزات",tasksToday:"مواعيد اليوم",
+      all:"الكل",confirmed:"مؤكد",held:"محجوز مبدئياً",cancelled:"ملغي",progress:"هلأ",free:"فاضي — احجز",available:"متاح",onJob:"عنده زيارة هلأ",off:"عطلة",
+      stConfirmed:"مؤكد",stHeld:"معلّق",stCancelled:"ملغي",
+      wd:["السبت","الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة"],wdS:["سبت","أحد","اثنين","ثلاثاء","أربعاء","خميس","جمعة"],am:"ص",pm:"م"},
+  en:{brand:"Mawid",bizName:"Al-Nour Est.",navCalendar:"Calendar",navStaff:"Technicians",navServices:"Services",navZones:"Zones",navClosures:"Closures",navUsers:"Users",navReport:"Monthly report",navSettings:"Settings",month:"November 2026",search:"Find by phone or reference…",day:"Day",weekV:"Week",monthV:"Month",newBooking:"New booking",
+      today:"Today's bookings",quick:"Quick booking",quickSub:"Find the nearest free slot in seconds",colDate:"DATE",colBookings:"BOOKINGS",tasksToday:"Today's visits",
+      all:"All",confirmed:"Confirmed",held:"On hold",cancelled:"Cancelled",progress:"Now",free:"Free — book",available:"Available",onJob:"On a job",off:"Day off",
+      stConfirmed:"Confirmed",stHeld:"Pending",stCancelled:"Cancelled",
+      wd:["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday"],wdS:["Sat","Sun","Mon","Tue","Wed","Thu","Fri"],am:"am",pm:"pm"}
+};
+
+/* ---------- Sample data (Sun 1 Nov 2026, Asia/Amman) ---------- */
+const techs = [
+  {id:1,ar:"محمود العلي",en:"Mahmoud Al-Ali",color:"#4466F2",init:{ar:"م",en:"M"}},
+  {id:2,ar:"سامر حداد",en:"Samer Haddad",color:"#22C77A",init:{ar:"س",en:"S"}},
+  {id:3,ar:"خالد الزعبي",en:"Khaled Al-Zoubi",color:"#8B6CF6",init:{ar:"خ",en:"K"}}
+];
+const Z = {hashmi:["الهاشمي الشمالي","Hashmi Shamali"],jabal:["جبل عمان","Jabal Amman"],abdoun:["عبدون","Abdoun"],tabarbour:["طبربور","Tabarbour"],
+           khalda:["خلدا","Khalda"],sweileh:["صويلح","Sweileh"],marka:["ماركا","Marka"],tlaa:["تلاع العلي","Tla'a Al-Ali"]};
+const bookings = [
+  {day:1,tech:1,s:9,e:10,   st:"confirmed",dev:["غسالة Samsung — ما بتعصر","Samsung washer — not spinning"],z:"tabarbour",ref:"SR-2026-000011"},
+  {day:1,tech:1,s:11,e:12,  st:"confirmed",dev:["ثلاجة LG — ما بتبرد","LG fridge — not cooling"],z:"hashmi",ref:"SR-2026-000009"},
+  {day:1,tech:1,s:14,e:15.5,st:"held",dev:["مكيف — بيعطي هوا سخن","AC — blowing warm air"],z:"khalda"},
+  {day:1,tech:2,s:10,e:11.5,st:"now",dev:["فرن غاز — ما بشعل","Gas oven — won't ignite"],z:"jabal",ref:"SR-2026-000010"},
+  {day:1,tech:2,s:13,e:14,  st:"confirmed",dev:["جلاية Bosch — تسريب مي","Bosch dishwasher — leaking"],z:"abdoun"},
+  {day:1,tech:2,s:16,e:17,  st:"free"},
+  {day:1,tech:3,s:9.5,e:10.5,st:"confirmed",dev:["نشافة — صوت عالي","Dryer — loud noise"],z:"sweileh"},
+  {day:1,tech:3,s:12,e:13,  st:"cancelled",dev:["ثلاجة Sharp — ماتور","Sharp fridge — motor"],z:"marka"},
+  {day:1,tech:3,s:15,e:16,  st:"confirmed",dev:["غسالة LG — ما بتسخن","LG washer — no heat"],z:"hashmi"},
+  {day:2,tech:1,s:10,e:11,  st:"confirmed",dev:["مكيف Gree — تعبئة غاز","Gree AC — gas refill"],z:"tlaa"},
+  {day:2,tech:2,s:12,e:13,  st:"held",dev:["ثلاجة — ثلج كتير","Fridge — heavy frost"],z:"khalda"},
+  {day:3,tech:3,s:9,e:10,   st:"confirmed",dev:["غسالة — تسريب مي","Washer — leaking"],z:"jabal"},
+  {day:3,tech:1,s:16,e:17,  st:"confirmed",dev:["فرن كهربا — ما بسخن","Electric oven — no heat"],z:"abdoun"}
+];
+const DAY0 = 9, DAY1 = 18, TODAY = 1, NOW = 10.7;
+
+let lang = "ar";
+const L = k => T[lang][k];
+const pick = a => lang === "ar" ? a[0] : a[1];
+const fmt = h => { const H = Math.floor(h), m = Math.round((h - H) * 60), h12 = ((H + 11) % 12) + 1; return h12 + ":" + String(m).padStart(2, "0"); };
+const timeRange = b => `${fmt(b.s)}<i>—··</i>${fmt(b.e)}`;
+const hourLabel = h => `${((h + 11) % 12) + 1} ${h < 12 ? L("am") : L("pm")}`;
+const stPill = st => ({confirmed:`<span class="pill st-confirmed">${L("stConfirmed")}</span>`,held:`<span class="pill st-held">${L("stHeld")}</span>`,
+                       cancelled:`<span class="pill st-cancelled">${L("stCancelled")}</span>`,now:`<span class="pill" style="background:rgba(255,255,255,.22);color:#fff">${L("progress")}</span>`}[st] || "");
+const avatar = (t, size = 30) => `<span class="avatar" style="background:${t.color};width:${size}px;height:${size}px">${t.init[lang]}</span>`;
+const pinIcon = `<svg class="i"><use href="#i-pin"/></svg>`;
+const kebab = `<button class="kebab" aria-label="more"><svg class="i"><use href="#i-more"/></svg></button>`;
+
+/* ---------- Desktop render ---------- */
+function renderWeek(){
+  // Week Sat 31 Oct – Fri 6 Nov
+  const nums = [31,1,2,3,4,5,6];
+  week.innerHTML = nums.map((n,i) => `<button class="wd ${n===1?"on":""} ${i===6?"off":""}"><span>${L("wdS")[i]}</span><b>${n}</b></button>`).join("");
+}
+function renderFilters(){
+  filters.innerHTML = `<span class="chip on">${L("all")}</span>` +
+    techs.map(t => `<span class="chip" style="gap:8px">${avatar(t,22)}${pick([t.ar,t.en])}</span>`).join("");
+}
+function renderBoard(){
+  boardHead.innerHTML = `<div></div>` + techs.map(t => {
+    const busy = bookings.some(b => b.day===TODAY && b.tech===t.id && b.st==="now");
+    return `<div class="tech">${avatar(t,38)}<div style="min-width:0"><b>${pick([t.ar,t.en])}</b><small class="${busy?"busy":""}">${busy?L("onJob"):L("available")}</small></div></div>`;
+  }).join("");
+  let hours = "";
+  for (let h = DAY0; h < DAY1; h++) hours += `<div>${hourLabel(h)}</div>`;
+  const cols = techs.map(t => {
+    const evs = bookings.filter(b => b.day===TODAY && b.tech===t.id).map(b => {
+      const top = (b.s - DAY0) * 84 + 4, height = (b.e - b.s) * 84 - 8;
+      if (b.st === "free") return `<button class="ev free" style="top:${top}px;height:${height}px"><svg class="i"><use href="#i-plus"/></svg>${L("free")}</button>`;
+      return `<article class="ev ${b.st}" style="top:${top}px;height:${height}px">
+        <span class="t">${pick(b.dev)}</span>
+        <span class="time">${timeRange(b)}</span>
+        <span class="meta"><span>${pick(Z[b.z])}</span>${stPill(b.st)}</span>
+      </article>`;
+    }).join("");
+    return `<div class="col">${evs}</div>`;
+  }).join("");
+  boardBody.innerHTML = `<div class="hours">${hours}</div>${cols}<div class="now-line" style="top:${(NOW-DAY0)*84}px"></div>`;
+}
+function renderStats(){
+  const today = bookings.filter(b => b.day===TODAY && b.st!=="free");
+  const c = s => today.filter(b => s.includes(b.st)).length;
+  todayCount.textContent = today.length;
+  stats.innerHTML = `
+    <div><b style="color:var(--success)">${c(["confirmed","now"])}</b><small style="color:#14965A">${L("stConfirmed")}</small></div>
+    <div><b style="color:var(--warning)">${c(["held"])}</b><small style="color:#B76E00">${L("stHeld")}</small></div>
+    <div><b style="color:var(--danger)">${c(["cancelled"])}</b><small style="color:#C53030">${L("stCancelled")}</small></div>`;
+  const list = bookings.filter(b => b.day===TODAY && !["free","cancelled"].includes(b.st)).sort((a,b) => a.s-b.s).slice(0,4);
+  const html = list.map(b => {
+    const t = techs.find(x => x.id===b.tech);
+    return `<div class="task"><div class="body"><div class="t">${pick(b.dev)} · ${pick(Z[b.z])}</div><div class="time">${timeRange(b)}</div></div>${avatar(t)}</div>`;
+  }).join("");
+  tasks.innerHTML = html; tasks2.innerHTML = html.replaceAll('class="task"','class="task" style="background:var(--surface);box-shadow:var(--shadow-sm)"');
+}
+function renderMonth(el){
+  // November 2026, Saturday-first week; Nov 1 = Sunday → 1 leading blank
+  let h = L("wdS").map(d => `<div class="dn">${d}</div>`).join("") + `<div></div>`;
+  const has = new Set(bookings.map(b => b.day));
+  for (let d = 1; d <= 30; d++){
+    const col = (d) % 7; // 0 = Sat ... 6 = Fri
+    const cls = [d===TODAY?"today":"", d===4?"sel":"", col===6?"off":"", has.has(d)&&d!==TODAY?"has":""].join(" ");
+    h += `<div class="d ${cls}"><span>${d}</span></div>`;
+  }
+  el.innerHTML = h;
+}
+
+/* ---------- Mobile render ---------- */
+function renderMobile(){
+  mChips.innerHTML = ["all","confirmed","held","cancelled"].map((k,i) => `<button class="chip ${i===0?"on":""}">${L(k)}</button>`).join("");
+  const days = [{d:1,wd:1},{d:2,wd:2},{d:3,wd:3}];
+  tl.innerHTML = days.map(({d,wd}) => {
+    const evs = bookings.filter(b => b.day===d && b.st!=="free").sort((a,b) => a.s-b.s);
+    const items = evs.map((b,idx) => {
+      const t = techs.find(x => x.id===b.tech);
+      const cls = b.st==="now" ? "now" : (d===2 && idx===0 ? "hero" : b.st);
+      return `<article class="m-ev ${cls}">
+        <div class="body">
+          <div class="t">${pick(b.dev)}</div>
+          <div class="time">${timeRange(b)}</div>
+          <div class="zone">${pinIcon}${pick(Z[b.z])}</div>
+        </div>
+        <div class="side">${avatar(t,32)}${["now","hero"].includes(cls)?"":stPill(b.st)}</div>
+        ${kebab}
+      </article>`;
+    }).join("");
+    return `<div class="tl-day ${d===TODAY?"today":""}">
+      <div class="tl-date"><b>${String(d).padStart(2,"0")}</b><small>${L("wd")[wd]}</small></div>
+      <div class="tl-events">${items}</div>
+    </div>`;
+  }).join("");
+}
+
+/* ---------- Wiring ---------- */
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  document.title = lang === "ar" ? "موعد — لوحة الحجوزات" : "Mawid — Bookings";
+  document.querySelectorAll("[data-t]").forEach(el => el.textContent = L(el.dataset.t));
+  document.querySelectorAll("[data-ph]").forEach(el => el.placeholder = L(el.dataset.ph));
+  document.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
+  mLang.textContent = lang === "ar" ? "EN" : "ع";
+  renderWeek(); renderFilters(); renderBoard(); renderStats(); renderMonth(mcal); renderMonth(mcal2); renderMobile();
+}
+document.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => { lang = b.dataset.lang; applyLang(); });
+mLang.onclick = () => { lang = lang === "ar" ? "en" : "ar"; applyLang(); };
+document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => {
+  document.querySelectorAll("[data-view]").forEach(x => x.classList.toggle("on", x === b));
+  mTimeline.style.display = b.dataset.view === "timeline" ? "" : "none";
+  mMonth.style.display = b.dataset.view === "month" ? "block" : "none";
+});
+applyLang();
+</script>
+</body>
+</html>

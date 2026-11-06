@@ -1,0 +1,10 @@
+# SITE_ADDRESS is a domain name (https with an automatic certificate) or ":80" (plain http, e.g. until a domain exists).
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	header {
+		-Server
+		# browsers stay on https for a year once they have seen it (ignored over plain http)
+		Strict-Transport-Security "max-age=31536000"
+	}
+	reverse_proxy app:3000
+}

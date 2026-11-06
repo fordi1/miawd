@@ -1,0 +1,24 @@
+# dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# secrets: never commit real environment files (the *.example files are the templates)
+.env
+.env.*
+!.env.example
+!**/.env.example
+.env.production*
+!deploy/env.production.example
+*.pem
+*.key
+*.p12
+
+# logs, scratch and editor files
+*.log
+scratch/
+.vscode/
+.idea/
+.claude/
+.DS_Store
+Thumbs.db

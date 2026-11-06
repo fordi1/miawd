@@ -1,0 +1,13 @@
+# keep secrets and junk out of every image
+.env
+.env.*
+**/.env
+**/.env.*
+.git
+.claude
+**/node_modules
+**/dist
+**/scratch
+**/*.log
+prototype
+RESEARCH.md
